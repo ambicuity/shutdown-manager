@@ -57,9 +57,18 @@ export async function startServer(opts: CreateServerOptions = {}): Promise<Runni
 }
 
 export async function fetchOk(url: string, opts: { signal?: AbortSignal } = {}): Promise<number> {
-  const res = await fetch(url, { signal: opts.signal });
-  await res.arrayBuffer();
-  return res.status;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const res = await fetch(url, { signal: opts.signal });
+      await res.arrayBuffer();
+      return res.status;
+    } catch (error) {
+      const isAbort = opts.signal?.aborted === true;
+      const code = (error as { cause?: { code?: string } }).cause?.code;
+      if (isAbort || code !== 'ECONNRESET' || attempt === 1) throw error;
+    }
+  }
+  throw new Error('unreachable');
 }
 
 export function detachExit(manager: ShutdownManager): void {

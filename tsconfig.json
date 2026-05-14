@@ -20,6 +20,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "verbatimModuleSyntax": false,
+    "ignoreDeprecations": "6.0",
 
     "declaration": true,
     "declarationMap": true,
