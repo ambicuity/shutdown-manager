@@ -1,0 +1,57 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#      _           _      _
+#  ___| |__  _   _| |_ __| | _____      ___ __        _ __ ___   __ _ _ __   __ _  __ _  ___ _ __
+# / __| '_ \| | | | __/ _` |/ _ \ \ /\ / / '_ \ _____| '_ ` _ \ / _` | '_ \ / _` |/ _` |/ _ \ '__|
+# \__ \ | | | |_| | || (_| | (_) \ V  V /| | | |_____| | | | | | (_| | | | | (_| | (_| |  __/ |
+# |___/_| |_|\__,_|\__\__,_|\___/ \_/\_/ |_| |_|     |_| |_| |_|\__,_|_| |_|\__,_|\__, |\___|_|
+#                                                                                  |___/
+#
+#  shutdown-manager  --  production shutdown orchestration for Node.js HTTP services
+#
+#  Author  : Ritesh Rana  <contact@riteshrana.engineer>
+#  Support : https://buymeacoffee.com/ritesh.rana
+#  License : MIT
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      # Give the pod enough headroom to:
+      #   preStopDelayMs (5s) + drain budget (15s) + cleanup budget (5s) = 25s
+      # Plus a small safety margin.
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: api
+          image: your-registry/api:1.0.0
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /ready          # served by your app; reads ShutdownManager.isReady()
+              port: 3000
+            periodSeconds: 2
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            periodSeconds: 10
+          lifecycle:
+            preStop:
+              # `preStop` runs *before* SIGTERM. We use it to give the
+              # service mesh / load balancer a head start on de-registration.
+              # The ShutdownManager.kubernetes({ preStopDelayMs }) handles
+              # the same delay programmatically once SIGTERM lands, so you
+              # can pick one or both depending on your platform.
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
