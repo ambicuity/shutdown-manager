@@ -20,10 +20,7 @@ export interface DrainResult {
   socketsDestroyed: number;
 }
 
-export async function runDrainingPhase(
-  ctx: PhaseContext,
-  deadline: number,
-): Promise<DrainResult> {
+export async function runDrainingPhase(ctx: PhaseContext, deadline: number): Promise<DrainResult> {
   transitionAndEmit(ctx, 'draining');
   ctx.tracker.markShuttingDown();
 
