@@ -141,7 +141,7 @@
     "@arethetypeswrong/cli": "^0.18.0",
     "@types/express": "^5.0.0",
     "@types/koa": "^3.0.2",
-    "@types/node": "^20.14.0",
+    "@types/node": "^25.9.1",
     "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
